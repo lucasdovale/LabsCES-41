@@ -17,6 +17,7 @@
 
 #define YYSTYPE TreeNode *
 static int savedInt;
+static int savedType;
 static char * savedName; /* for use in assignments */
 static int savedLineNo;  /* ditto */
 static TreeNode * savedTree; /* stores syntax tree for later return */
@@ -25,8 +26,7 @@ int yyerror(char *s);
 %}
 
 // código original da prof
-%token IF THEN ELSE END REPEAT UNTIL READ WRITE
-%token ERROR
+%token IF ELSE ERROR
 %token ID NUM
 %token ASSIGN EQ LT PLUS MINUS TIMES OVER LPAREN RPAREN SEMI
 
@@ -71,8 +71,10 @@ numero              : NUM { savedInt = atoi(tokenString);
                       savedLineNo = lineno; }
                     ;
 
-tipo_especificador  : INT { $$ = newStmtNode(IntK); }
-                    | VOID { $$ = newStmtNode(VoidK); }
+tipo_especificador  : INT { $$ = newStmtNode(IntK);
+                          savedType = Integer; }
+                    | VOID { $$ = newStmtNode(VoidK);
+                          savedType = Void; }
                     ;
 
 var_declaracao      : tipo_especificador
@@ -80,6 +82,7 @@ var_declaracao      : tipo_especificador
                       { $$ = $1;
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
+                        $$->child[0]->type = savedType;
                       }
                       SEMI 
                     | tipo_especificador
@@ -88,6 +91,7 @@ var_declaracao      : tipo_especificador
                         $$ = $1;
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
+                        $$->child[0]->type = savedType;
                       }
                       LBRCKS 
                       { $$ = $1;
@@ -113,6 +117,7 @@ fun_declaracao      : tipo_especificador
                         $$ = $1;
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
+                        $$->child[0]->type = savedType;
                       }
                       LPAREN params RPAREN composto_decl 
                       { $$ = $3;
@@ -146,6 +151,7 @@ param               : tipo_especificador
                         $$ = $1;
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
+                        $$->child[0]->type = savedType;
                       }
                     | tipo_especificador
                       identificador
@@ -153,6 +159,7 @@ param               : tipo_especificador
                         $$ = $1;
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
+                        $$->child[0]->type = savedType;
                       }
                       LBRCKS
                       { $$ = $1;
@@ -383,8 +390,7 @@ arg_lista           : arg_lista COL expressao
 %%
 
 int yyerror(char * message)
-{ fprintf(listing,"Erro de sintaxe na linha %d: %s\n",lineno,message);
-  fprintf(listing,"Token atual: ");
+{ fprintf(listing,"ERRO SINTÁTICO na linha '%d', token '%s'\n",lineno,tokenString);
   printToken(yychar,tokenString);
   Error = TRUE;
   return 0;
