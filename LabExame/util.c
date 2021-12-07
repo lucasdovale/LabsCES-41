@@ -1,17 +1,6 @@
-/****************************************************/
-/* File: util.c                                     */
-/* Utility function implementation                  */
-/* for the TINY compiler                            */
-/* Compiler Construction: Principles and Practice   */
-/* Kenneth C. Louden                                */
-/****************************************************/
-
 #include "globals.h"
 #include "util.h"
 
-/* Procedure printToken prints a token 
- * and its lexeme to the listing file
- */
 void printToken( TokenType token, const char* tokenString )
 { switch (token)
   { case IF:
@@ -54,14 +43,11 @@ void printToken( TokenType token, const char* tokenString )
       fprintf(listing,
           "ERRO LÉXICO na linha '%d', lexema '%s'\n",lineno,tokenString);
       break;
-    default: /* should never happen */
+    default: 
       fprintf(listing,"'Unknown token: %d'\n",token);
   }
 }
 
-/* Function newStmtNode creates a new statement
- * node for syntax tree construction
- */
 TreeNode * newStmtNode(StmtKind kind)
 { TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
   int i;
@@ -80,9 +66,6 @@ TreeNode * newStmtNode(StmtKind kind)
   return t;
 }
 
-/* Function newExpNode creates a new expression 
- * node for syntax tree construction
- */
 TreeNode * newExpNode(ExpKind kind)
 { TreeNode * t = (TreeNode *) malloc(sizeof(TreeNode));
   int i;
@@ -94,15 +77,12 @@ TreeNode * newExpNode(ExpKind kind)
     t->nodekind = ExpK;
     t->kind.exp = kind;
     t->lineno = lineno;
-    if(kind == IntK) t->type = Integer;
-    else t->type = Void;
+    t->type = Void;
   }
   return t;
 }
 
-/* Function copyString allocates and makes a new
- * copy of an existing string
- */
+
 char * copyString(char * s)
 { int n;
   char * t;
@@ -115,25 +95,18 @@ char * copyString(char * s)
   return t;
 }
 
-/* Variable indentno is used by printTree to
- * store current number of spaces to indent
- */
+
 static int indentno = 0;
 
-/* macros to increase/decrease indentation */
 #define INDENT indentno+=2
 #define UNINDENT indentno-=2
 
-/* printSpaces indents by printing spaces */
 static void printSpaces(void)
 { int i;
   for (i=0;i<indentno;i++)
     fprintf(listing," ");
 }
 
-/* procedure printTree prints a syntax tree to the 
- * listing file using indentation to indicate subtrees
- */
 void printTree( TreeNode * tree )
 { int i;
   INDENT;
@@ -167,9 +140,6 @@ void printTree( TreeNode * tree )
           break;
         case ReturnK:
           fprintf(listing,"Return\n");
-          break;
-        case GenericK:
-          fprintf(listing,"Id: %d %s\n",tree->lineno, tree->attr.name);
           break;
         default:
           fprintf(listing,"Unknown ExpNode kind\n");

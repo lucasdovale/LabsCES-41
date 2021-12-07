@@ -25,12 +25,10 @@ static int yylex(void);
 int yyerror(char *s);
 %}
 
-// código original da prof
 %token IF ELSE ERROR
 %token ID NUM
 %token ASSIGN EQ LT PLUS MINUS TIMES OVER LPAREN RPAREN SEMI
 
-// adicionando o do lab antigo
 %token DIF LTE RT RTE
 %token INT RETURN VOID WHILE
 %token LCURBR RCURBR LBRCKS RBRCKS COL
@@ -83,6 +81,8 @@ var_declaracao      : tipo_especificador
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
+                        $$->child[0]->auxType = VarK;
+                        $$->lineno = savedLineNo;
                       }
                       SEMI 
                     | tipo_especificador
@@ -92,6 +92,8 @@ var_declaracao      : tipo_especificador
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
+                        $$->child[0]->auxType = VarK;
+                        $$->lineno = savedLineNo;
                       }
                       LBRCKS 
                       { $$ = $1;
@@ -102,11 +104,13 @@ var_declaracao      : tipo_especificador
                       { $$ = $1;
                         $$->child[0]->child[1] = newExpNode(ConstK);;
                         $$->child[0]->child[1]->attr.val = savedInt;
+                        $$->child[0]->child[1]->type = Integer;
+
                       }
                       RBRCKS
                       { $$ = $1;
-                        $$->child[0]->child[2] = newExpNode(OpK);
-                        $$->child[0]->child[2]->attr.op = RBRCKS;
+                        // $$->child[0]->child[2] = newExpNode(OpK);
+                        // $$->child[0]->child[2]->attr.op = RBRCKS;
                       }     
                       SEMI
                     ;
@@ -118,6 +122,8 @@ fun_declaracao      : tipo_especificador
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
+                        $$->child[0]->auxType = FunK;
+                        $$->lineno = savedLineNo;
                       }
                       LPAREN params RPAREN composto_decl 
                       { $$ = $3;
@@ -152,6 +158,8 @@ param               : tipo_especificador
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
+                        $$->child[0]->auxType = VarK;
+                        $$->lineno = savedLineNo;
                       }
                     | tipo_especificador
                       identificador
@@ -160,21 +168,16 @@ param               : tipo_especificador
                         $$->child[0] = newExpNode(IdK);
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
+                        $$->child[0]->auxType = VarK;
+                        $$->lineno = savedLineNo;
                       }
                       LBRCKS
-                      { $$ = $1;
-                        $$->child[0]->child[0] = newExpNode(OpK);
-                        $$->child[0]->child[0]->attr.op = LBRCKS;
-                      } 
-                      RBRCKS
-                      { $$ = $1;
-                        $$->child[0]->child[1] = newExpNode(OpK);
-                        $$->child[0]->child[1]->attr.op = RBRCKS;
-                      }          
+                      RBRCKS       
                     ;
 
 composto_decl       : LCURBR local_declaracoes statement_lista RCURBR 
                        {  YYSTYPE t = $2;
+                          t->auxType = ChaveK;
                         if (t != NULL)
                         { while (t->sibling != NULL)
                               t = t->sibling;
@@ -252,6 +255,7 @@ expressao           : var ASSIGN expressao
                       { $$ = newExpNode(OpK);
                         $$->attr.op = ASSIGN;
                         $$->child[0] = $1;
+                        $$->child[0]->type = savedType;
                         $$->child[1] = $3;
                       }
                     | simples_expressao 
@@ -261,10 +265,12 @@ expressao           : var ASSIGN expressao
 var                 : identificador
                       { $$ = newExpNode(IdK);
                         $$->attr.name = savedName;
+                        $$->lineno = savedLineNo;
                       }
                     | identificador
                       { $$ = newExpNode(IdK);
                         $$->attr.name = savedName;
+                        $$->lineno = savedLineNo;
                       }
                       LBRCKS 
                       { $$ = $2;
@@ -358,6 +364,7 @@ fator               : LPAREN expressao RPAREN
                     | numero
                         { $$ = newExpNode(ConstK);
                           $$->attr.val = savedInt;
+                          $$->type = Integer;
                         }
                     | error { $$ = NULL; }
                     ;
@@ -365,6 +372,7 @@ fator               : LPAREN expressao RPAREN
 ativacao            : identificador
                       { $$ = newExpNode(IdK);
                         $$->attr.name = savedName;
+                        $$->lineno = savedLineNo;
                       }
                       LPAREN args RPAREN
                       { $$ = $2;
@@ -396,9 +404,6 @@ int yyerror(char * message)
   return 0;
 }
 
-/* yylex calls getToken to make Yacc/Bison output
- * compatible with ealier versions of the CMINUS scanner
- */
 static int yylex(void)
 { return getToken(); }
 

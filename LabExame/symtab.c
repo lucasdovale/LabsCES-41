@@ -14,111 +14,160 @@
 #include "symtab.h"
 #include "globals.h"
 
-#define SIZE 211
 #define SHIFT 4
 
-static int hash ( char * key )
-{ int temp = 0;
+static int hash(char *key)
+{
+  int temp = 0;
   int i = 0;
   while (key[i] != '\0')
-  { temp = ((temp << SHIFT) + key[i]) % SIZE;
+  {
+    temp = ((temp << SHIFT) + key[i]) % SIZE;
     ++i;
   }
   return temp;
 }
 
-typedef struct LineListRec
-   { int lineno;
-     struct LineListRec * prox;
-   } * LineList;
-
-
-typedef struct BucketListRec
-   { char * nome;
-     LineList linhas;
-     int loc ;
-     ExpType tipo;
-     char* escopo;
-     struct BucketListRec * prox;
-   } * BucketList;
-
-static BucketList hashTable[SIZE];
-
-
-void st_insert( char * nome, ExpType tipo, int lineno, int loc )
-{ int h = hash(nome);
-  BucketList l =  hashTable[h];
-  while ((l != NULL) && (strcmp(nome,l->nome) != 0))
+void st_insere ( char * nome, ExpType tipo, AuxType auxType, int lineno, int loc, int nivel )
+{
+  int h = hash(nome);
+  BucketList l = hashTable[h];
+  while ((l != NULL) && (strcmp(nome, l->nome) != 0))
     l = l->prox;
-  if (l == NULL) 
-  { l = (BucketList) malloc(sizeof(struct BucketListRec));
+  if (l == NULL)
+  {
+    l = (BucketList)malloc(sizeof(struct BucketListRec));
     l->nome = nome;
-    l->linhas = (LineList) malloc(sizeof(struct LineListRec));
+    l->linhas = (LineList)malloc(sizeof(struct LineListRec));
     l->linhas->lineno = lineno;
     l->loc = loc;
     l->tipo = tipo;
-    l->escopo = "global";
+    l->escopo = nivel;
+    l->aux = auxType;
     l->linhas->prox = NULL;
     l->prox = hashTable[h];
-    hashTable[h] = l; }
-  else 
-  { LineList t = l->linhas;
-    while (t->prox != NULL) t = t->prox;
-    t->prox = (LineList) malloc(sizeof(struct LineListRec));
+    hashTable[h] = l;
+  }
+  else
+  {
+    LineList t = l->linhas;
+    while (t->prox != NULL)
+      t = t->prox;
+    t->prox = (LineList)malloc(sizeof(struct LineListRec));
     t->prox->lineno = lineno;
     t->prox->prox = NULL;
   }
-} 
+}
 
-
-int st_lookup ( char * nome )
-{ int h = hash(nome);
-  BucketList l =  hashTable[h];
-  while ((l != NULL) && (strcmp(nome,l->nome) != 0))
+int st_busca(char *nome)
+{
+  int h = hash(nome);
+  BucketList l = hashTable[h];
+  while ((l != NULL) && (strcmp(nome, l->nome) != 0))
     l = l->prox;
-  if (l == NULL) return -1;
-  else return l->loc;
+  if (l == NULL)
+    return -1;
+  else
+    return l->loc;
 }
 
-// A FAZER
-int st_elimina ( char * nome )
-{  
+void st_elimina(int nivel)
+{
+  for (int i = 0; i < SIZE; i++) {
+    if (hashTable[i] == NULL) continue;
+    BucketList raizNova = hashTable[i];
+    while (raizNova && raizNova->escopo == nivel) { raizNova = raizNova->prox; }
+    BucketList bucketAnterior = (BucketList)malloc(sizeof(struct BucketListRec));
+    bucketAnterior->prox = hashTable[i];
+    while (hashTable[i] != NULL) {
+      if (hashTable[i]->escopo == nivel) {
+        BucketList table = hashTable[i];
+        hashTable[i] = hashTable[i]->prox;
+        bucketAnterior->prox = hashTable[i];
+        free(table);
+      }
+      else {
+        bucketAnterior = hashTable[i];
+        hashTable[i] = hashTable[i]->prox;
+      }
+    }
+    hashTable[i] = raizNova;
+  }
 }
 
-// A FAZER
-int st_declarado ( char * nome )
-{  
+int st_declarado(char *nome, int nivel)
+{
+  int h = hash(nome);
+  BucketList l = hashTable[h];
+  while ((l != NULL) && (strcmp(nome, l->nome) != 0))
+      l = l->prox;
+  if (l->escopo != nivel || l == NULL)
+      return 0;
+  return 1;
 }
 
-// A FAZER
-int st_seta_atributos ( char * nome )
-{  
+BucketList st_obtem_atributos(char *nome)
+{
+  int h = hash(nome);
+  BucketList l = hashTable[h];
+  while ((l != NULL) && (strcmp(nome, l->nome) != 0))
+      l = l->prox;
+  return l;
 }
 
-// A FAZER
-int st_obtem_atributos ( char * nome )
-{  
+int st_seta_atributos(TreeNode *t, int nivel)
+{
+  if (t->child[1]->type != Integer)
+  {
+    BucketList b = st_obtem_atributos(t->child[1]->attr.name);
+    if (b == NULL)
+    {
+      fprintf(listing, "ERRO SEMÂNTICO (5) na linha '%d', identificador '%s'\n", t->child[1]->lineno, t->child[1]->attr.name);
+    }
+  }
+
+  if (st_busca(t->child[0]->attr.name) == -1) {
+    fprintf(listing, "ERRO SEMÂNTICO (1) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
+  }
+  else
+  {
+    if (nivel == 0 || st_declarado(t->child[0]->attr.name, nivel))
+    {
+      if (t->child[0]->type == t->child[1]->type)
+      {
+        // printf("ATRIBUIIIIIIIIIII");
+      }
+      else
+      {
+        fprintf(listing, "ERRO SEMÂNTICO (2) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
+      }
+    }
+  }
 }
 
-
-void printSymTab(FILE * listing)
-{ int i;
-  fprintf(listing,"Nome        Tipo       Escopo      Loc              Linhas\n");
-  fprintf(listing,"----        ----     ----------    ---   ----------------------------\n");
-  for (i=0;i<SIZE;++i)
-  { if (hashTable[i] != NULL)
-    { BucketList l = hashTable[i];
+void printSymTab(FILE *listing)
+{
+  int i;
+  fprintf(listing, "Nome        Tipo       Escopo      Loc              Linhas\n");
+  fprintf(listing, "----        ----     ----------    ---   ----------------------------\n");
+  for (i = 0; i < SIZE; ++i)
+  {
+    if (hashTable[i] != NULL)
+    {
+      BucketList l = hashTable[i];
       while (l != NULL)
-      { LineList t = l->linhas;
-        fprintf(listing,"%-14s",l->nome);
-        fprintf(listing,"%-10d",l->tipo);
-        fprintf(listing,"%-12s",l->escopo);
-        fprintf(listing,"%2d   ",l->loc);
+      {
+        LineList t = l->linhas;
+        fprintf(listing, "%-14s", l->nome);
+        fprintf(listing, "%-12d", l->tipo);
+        fprintf(listing, "%-9d", l->escopo);
+        fprintf(listing, "%2d   ", l->loc);
         while (t != NULL)
-        { fprintf(listing," %2d ->",t->lineno);
+        {
+          fprintf(listing, " %2d ->", t->lineno);
           t = t->prox;
         }
-        fprintf(listing,"\n");
+        fprintf(listing, "\n");
         l = l->prox;
       }
     }

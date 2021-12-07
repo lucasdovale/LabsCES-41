@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "typeinfo": "c",
+        "symtab": "c",
+        "analyze": "c",
+        "analyze.h": "c"
+    }
+}
