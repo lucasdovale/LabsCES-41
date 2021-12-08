@@ -127,7 +127,7 @@ int st_seta_atributos(TreeNode *t, int nivel)
   {
     BucketList b = st_obtem_atributos(t->child[0]->attr.name);
     int is_declared = st_declarado(t->child[0]->attr.name, b->escopo);
-    if (b->escopo == 0 || b->escopo == nivel)
+    if (b->escopo == 0 || is_declared)
       if (t->child[0]->type != t->child[1]->type)
         fprintf(listing, "ERRO SEMÂNTICO (2) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
   }
@@ -149,12 +149,6 @@ void printSymTab(FILE *listing)
         fprintf(listing, "%-14s", l->nome);
         fprintf(listing, "%-12d", l->tipo);
         fprintf(listing, "%-9d", l->escopo);
-        // fprintf(listing, "%2d   ", l->loc);
-        // while (t != NULL)
-        // {
-        //   fprintf(listing, " %2d ->", t->lineno);
-        //   t = t->prox;
-        // }
         fprintf(listing, "\n");
         l = l->prox;
       }

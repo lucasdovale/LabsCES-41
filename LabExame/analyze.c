@@ -28,9 +28,8 @@ static void traverse(TreeNode *t,
         traverse(t->child[i], preProc, postProc);
     }
     postProc(t);
-    if (t->chave == 1)
-    {
-      // st_elimina(nivel);
+    if (t->chave == 1) {
+      st_elimina(nivel);
       nivel--;
     }
     traverse(t->sibling, preProc, postProc);
@@ -52,11 +51,10 @@ static void insertNode(TreeNode *t)
   case StmtK:
     switch (t->kind.stmt)
     {
-    // case Void:
     case IntK:
       {
         BucketList b = st_obtem_atributos(t->child[0]->attr.name);
-        if(b && b->aux != FunK)
+        if(b != NULL && b->aux != FunK)
           fprintf(listing, "ERRO SEMÂNTICO (4) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
         else 
         	st_insere(t->child[0]->attr.name, t->child[0]->type, t->child[0]->auxType, t->child[0]->lineno, loc++, nivel);
@@ -78,16 +76,15 @@ static void insertNode(TreeNode *t)
       }
       else {
         BucketList b = st_obtem_atributos(t->attr.name);
-        // if (t->type == Integer && b->aux == FunK)
-        //   fprintf(listing, "ERRO SEMÂNTICO (7) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
-        // else
+        if (t->type == Integer && b->aux == FunK)
+          fprintf(listing, "ERRO SEMÂNTICO (7) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
+        else
           	st_insere(t->attr.name, t->type, t->auxType, t->lineno, 0, nivel);
       }
       break;
     case OpK:
-      if (t->attr.op == ASSIGN)  {
+      if (t->attr.op == ASSIGN) 
         st_seta_atributos(t, nivel);
-      }
       break;
     default:
       break;
@@ -127,10 +124,8 @@ static void checkNode(TreeNode *t)
     switch (t->kind.exp)
     {
     case OpK:
-		  // if (t->child[0] && (t->child[0]->type == Integer) && (t->child[1] && t->child[1]->type == Integer)) { // se os tipos sao iguais
-      //   if (t->child[0]->child[0] != NULL ^ t->child[1]->child[0] != NULL) // quando tem array
-      //     typeError(t, "Op applied to non-integer");
-      // } else typeError(t, "Op applied to non-integer");
+		  if (t->child[0]->type == Integer && t->child[1]->type == Integer) 
+          typeError(t, "Op applied to non-integer");
       if ((t->attr.op == EQ) || (t->attr.op == LT))
         t->type = Boolean;
       else
