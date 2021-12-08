@@ -31,7 +31,7 @@ extern int lineno;
 typedef enum {StmtK,ExpK} NodeKind;
 typedef enum {IfK,RepeatK,AssignK,ReadK,WriteK,WhileK,IntK,VoidK,ReturnK} StmtKind;
 typedef enum {OpK,ConstK,IdK} ExpKind;
-typedef enum {FunK,VarK,ChaveK,} AuxType;
+typedef enum {FunK,VarK,ChaveK} AuxType;
 typedef enum {Void,Integer,Boolean} ExpType;
 
 #define MAXCHILDREN 3
@@ -40,6 +40,7 @@ typedef struct treeNode
    { struct treeNode * child[MAXCHILDREN];
      struct treeNode * sibling;
      int lineno;
+     int chave; // adicionei pra testar
      NodeKind nodekind;
      union { StmtKind stmt; ExpKind exp;} kind;
      union { TokenType op;

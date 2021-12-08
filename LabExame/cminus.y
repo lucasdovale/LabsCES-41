@@ -123,6 +123,7 @@ fun_declaracao      : tipo_especificador
                         $$->child[0]->attr.name = savedName;
                         $$->child[0]->type = savedType;
                         $$->child[0]->auxType = FunK;
+                        $$->chave = 1;
                         $$->lineno = savedLineNo;
                       }
                       LPAREN params RPAREN composto_decl 
@@ -177,13 +178,13 @@ param               : tipo_especificador
 
 composto_decl       : LCURBR local_declaracoes statement_lista RCURBR 
                        {  YYSTYPE t = $2;
-                          t->auxType = ChaveK;
-                        if (t != NULL)
-                        { while (t->sibling != NULL)
-                              t = t->sibling;
-                          t->sibling = $3;
-                          $$ = $2; }
-                          else $$ = $3;
+                          // t->auxType = ChaveK;
+                          if (t != NULL)
+                          { while (t->sibling != NULL)
+                                t = t->sibling;
+                            t->sibling = $3;
+                            $$ = $2; }
+                            else $$ = $3;
                       }
                     ;
 
@@ -224,11 +225,13 @@ expressao_decl      : expressao SEMI
         
 selecao_decl        : IF LPAREN expressao RPAREN statement 
                       { $$ = newStmtNode(IfK);
+                        $$->chave = 1;
                         $$->child[0] = $3;
                         $$->child[1] = $5;
                       }     
                     | IF LPAREN expressao RPAREN statement ELSE statement 
                       { $$ = newStmtNode(IfK);
+                        $$->chave = 1;
                         $$->child[0] = $3;
                         $$->child[1] = $5;
                         $$->child[2] = $7;
@@ -237,6 +240,7 @@ selecao_decl        : IF LPAREN expressao RPAREN statement
 
 iteracao_decl       : WHILE LPAREN expressao RPAREN statement
                       { $$ = newStmtNode(WhileK);
+                        $$->chave = 1;
                         $$->child[0] = $3;
                         $$->child[1] = $5;
                       }
@@ -256,7 +260,8 @@ expressao           : var ASSIGN expressao
                         $$->attr.op = ASSIGN;
                         $$->child[0] = $1;
                         $$->child[0]->type = savedType;
-                        $$->child[1] = $3;
+                        $$->child[1] = $3;                        
+                        $$->child[1]->type = savedType;
                       }
                     | simples_expressao 
                       { $$ = $1; }

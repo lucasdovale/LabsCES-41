@@ -117,39 +117,27 @@ BucketList st_obtem_atributos(char *nome)
 
 int st_seta_atributos(TreeNode *t, int nivel)
 {
-  if (t->child[1]->type != Integer)
-  {
-    BucketList b = st_obtem_atributos(t->child[1]->attr.name);
-    if (b == NULL)
-    {
-      fprintf(listing, "ERRO SEMÂNTICO (5) na linha '%d', identificador '%s'\n", t->child[1]->lineno, t->child[1]->attr.name);
-    }
-  }
-
+  BucketList b = st_obtem_atributos(t->child[1]->attr.name);
+  if (b == NULL || t->child[1]->type != Integer)
+    fprintf(listing, "ERRO SEMÂNTICO (5) na linha '%d', identificador '%s'\n", t->child[1]->lineno, t->child[1]->attr.name);
   if (st_busca(t->child[0]->attr.name) == -1) {
     fprintf(listing, "ERRO SEMÂNTICO (1) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
   }
   else
   {
-    if (nivel == 0 || st_declarado(t->child[0]->attr.name, nivel))
-    {
-      if (t->child[0]->type == t->child[1]->type)
-      {
-        // printf("ATRIBUIIIIIIIIIII");
-      }
-      else
-      {
+    BucketList b = st_obtem_atributos(t->child[0]->attr.name);
+    int is_declared = st_declarado(t->child[0]->attr.name, b->escopo);
+    if (b->escopo == 0 || b->escopo == nivel)
+      if (t->child[0]->type != t->child[1]->type)
         fprintf(listing, "ERRO SEMÂNTICO (2) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
-      }
-    }
   }
 }
 
 void printSymTab(FILE *listing)
 {
   int i;
-  fprintf(listing, "Nome        Tipo       Escopo      Loc              Linhas\n");
-  fprintf(listing, "----        ----     ----------    ---   ----------------------------\n");
+  fprintf(listing, "Nome        Tipo       Escopo\n");
+  fprintf(listing, "----        ----     ----------\n");
   for (i = 0; i < SIZE; ++i)
   {
     if (hashTable[i] != NULL)
@@ -161,12 +149,12 @@ void printSymTab(FILE *listing)
         fprintf(listing, "%-14s", l->nome);
         fprintf(listing, "%-12d", l->tipo);
         fprintf(listing, "%-9d", l->escopo);
-        fprintf(listing, "%2d   ", l->loc);
-        while (t != NULL)
-        {
-          fprintf(listing, " %2d ->", t->lineno);
-          t = t->prox;
-        }
+        // fprintf(listing, "%2d   ", l->loc);
+        // while (t != NULL)
+        // {
+        //   fprintf(listing, " %2d ->", t->lineno);
+        //   t = t->prox;
+        // }
         fprintf(listing, "\n");
         l = l->prox;
       }

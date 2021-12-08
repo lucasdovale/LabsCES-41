@@ -3,6 +3,7 @@
         "typeinfo": "c",
         "symtab": "c",
         "analyze": "c",
-        "analyze.h": "c"
+        "analyze.h": "c",
+        "random": "cpp"
     }
 }

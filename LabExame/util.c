@@ -61,7 +61,7 @@ TreeNode * newStmtNode(StmtKind kind)
     t->lineno = lineno;
     if(kind == IntK) t->type = Integer;
     else t->type = Void;
-
+    t->chave = 0;
   }
   return t;
 }
@@ -78,6 +78,7 @@ TreeNode * newExpNode(ExpKind kind)
     t->kind.exp = kind;
     t->lineno = lineno;
     t->type = Void;
+    t->chave = 0;
   }
   return t;
 }

@@ -19,18 +19,16 @@ static void traverse(TreeNode *t,
 {
   if (t != NULL)
   {
-    if (t->auxType == ChaveK || t->kind.stmt == WhileK || t->kind.stmt == IfK)
-    {
-      nivel++;
-    }
     preProc(t);
+    if (t->chave == 1) 
+      nivel++;
     {
       int i;
       for (i = 0; i < MAXCHILDREN; i++)
         traverse(t->child[i], preProc, postProc);
     }
     postProc(t);
-    if (t->auxType == ChaveK || t->kind.stmt == WhileK || t->kind.stmt == IfK)
+    if (t->chave == 1)
     {
       // st_elimina(nivel);
       nivel--;
@@ -54,18 +52,16 @@ static void insertNode(TreeNode *t)
   case StmtK:
     switch (t->kind.stmt)
     {
-    case AssignK:
-      // if (st_busca(t->attr.name) == -1)
-      //   st_insere(t->attr.name,t->type,t->auxType,t->lineno,loc++,nivel);
-      // else
-      //   {
-      //   st_insere(t->attr.name,t->type,t->auxType,t->lineno,0,nivel);
-      //   }
-      break;
-    // case IntK:
-    // case VoidK:
-    // case WhileK:
-    // case ReturnK:
+    // case Void:
+    case IntK:
+      {
+        BucketList b = st_obtem_atributos(t->child[0]->attr.name);
+        if(b && b->aux != FunK)
+          fprintf(listing, "ERRO SEMÂNTICO (4) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
+        else 
+        	st_insere(t->child[0]->attr.name, t->child[0]->type, t->child[0]->auxType, t->child[0]->lineno, loc++, nivel);
+        break;
+      }
     default:
       break;
     }
@@ -75,26 +71,23 @@ static void insertNode(TreeNode *t)
     {
     case IdK:
       if (st_busca(t->attr.name) == -1) {
-        if (t->auxType == VarK && t->type == Void) 
-          fprintf(listing, "ERRO SEMÂNTICO (3) na linha '%d', identificador '%s'\n", t->child[0]->lineno, t->child[0]->attr.name);
-        else
-          st_insere(t->attr.name, t->type, t->auxType, t->lineno, loc++, nivel);
+        if (t->auxType == VarK && t->type == Void)
+          fprintf(listing, "ERRO SEMÂNTICO (3) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
+        else 
+		      st_insere(t->attr.name, t->type, t->auxType, t->lineno, loc++, nivel);
       }
       else {
         BucketList b = st_obtem_atributos(t->attr.name);
-        if (b != NULL) {
-          if (b->aux == FunK)
-            fprintf(listing, "ERRO SEMÂNTICO (7) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
-          else  
-            fprintf(listing, "ERRO SEMÂNTICO (4) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
-        } 
-        else
-          st_insere(t->attr.name, t->type, t->auxType, t->lineno, 0, nivel);
+        // if (t->type == Integer && b->aux == FunK)
+        //   fprintf(listing, "ERRO SEMÂNTICO (7) na linha '%d', identificador '%s'\n", t->lineno, t->attr.name);
+        // else
+          	st_insere(t->attr.name, t->type, t->auxType, t->lineno, 0, nivel);
       }
       break;
     case OpK:
-      if (t->attr.op == ASSIGN)
+      if (t->attr.op == ASSIGN)  {
         st_seta_atributos(t, nivel);
+      }
       break;
     default:
       break;
@@ -134,9 +127,10 @@ static void checkNode(TreeNode *t)
     switch (t->kind.exp)
     {
     case OpK:
-      if ((t->child[0]->type != Integer) ||
-          (t->child[1]->type != Integer))
-        typeError(t, "Op applied to non-integer");
+		  // if (t->child[0] && (t->child[0]->type == Integer) && (t->child[1] && t->child[1]->type == Integer)) { // se os tipos sao iguais
+      //   if (t->child[0]->child[0] != NULL ^ t->child[1]->child[0] != NULL) // quando tem array
+      //     typeError(t, "Op applied to non-integer");
+      // } else typeError(t, "Op applied to non-integer");
       if ((t->attr.op == EQ) || (t->attr.op == LT))
         t->type = Boolean;
       else
